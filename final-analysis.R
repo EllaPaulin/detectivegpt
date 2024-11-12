@@ -1,6 +1,7 @@
 library("stringr")
 library("ggplot2")
-setwd("C:/Users/ellaw/OneDrive/Desktop/School/txtlab/detectiveGPT")
+library("irr")
+#setwd("C:/Users/ellaw/OneDrive/Desktop/School/txtlab/detectiveGPT")
 
 ### read in csv files for each annotator ----
 
@@ -113,6 +114,36 @@ for (i in 1:6){
   print(average_deviation(crit))
 }
 
+
+### inter-annotator agreement for best-worst ----
+
+#make appropriate df
+
+performance.df <- NULL
+performance.df <- cbind(monster.df[monster.df$Annotator == 1, ]$Performance,
+                        monster.df[monster.df$Annotator == 2, ]$Performance,
+                        monster.df[monster.df$Annotator == 3, ]$Performance,
+                        monster.df[monster.df$Annotator == 4, ]$Performance)
+colnames(performance.df) <- c("fst", "snd", "thr", "frt")
+
+#BAD!!
+kappam.fleiss(performance.df, detail=TRUE)
+
+#BAD!!
+kappam.light(performance.df)
+
+for (a1 in c("fst", "snd", "thr", "frt")){
+  for (a2 in c("fst", "snd", "thr", "frt")){
+    if (a1 != a2){
+      test <- performance.df[, c(a1, a2)]
+      print(kappam.fleiss(test)$value)
+    }
+  }
+}
+
+### calculation for win/neutral/lose ratios ----
+
+badphi <- length(monster.df[monster.df$Performance == "Loser" & monster.df$unscrambled == "h", ]$Stem)
 
 ### means and medians for each criteria ALL POINTS ----
 
@@ -341,7 +372,7 @@ hist(c(as.numeric(monsterLosers.df$Immutable)),
      breaks = c(0, 1, 2, 3, 4, 5)
 )
 
-###Compare distributions of each criterion for winners, losers, total ----
+### Compare distributions of each criterion for winners, losers, total ----
 
 monsterWinners.df <- monster.df[monster.df$Most == "x", ]
 monsterLosers.df <- monster.df[monster.df$Least == "x", ]
@@ -373,3 +404,4 @@ ggplot(monsterWinners.df, aes(x=x)) +
 ggplot(monsterWinners.df, aes(x = Important, y = after_stat(density))) +
   geom_histogram(stat="count") +
   geom_density(color = "green", linewidth = 2, stat="count")
+
